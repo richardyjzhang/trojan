@@ -18,16 +18,16 @@ jobs:
     - name: Install dependencies
       run: |
         brew install cmake boost openssl@3 mysql-client
+        echo "CMAKE_PREFIX_PATH=/opt/homebrew/opt/boost:/opt/homebrew/opt/openssl@3:/opt/homebrew/opt/mysql-client" >> $GITHUB_ENV
 
     - name: Build
       run: |
         mkdir build
         cd build
         cmake .. \
+          -DCMAKE_PREFIX_PATH="/opt/homebrew/opt/boost;/opt/homebrew/opt/openssl@3;/opt/homebrew/opt/mysql-client" \
+          -DBoost_NO_WARN_NEW_VERSIONS=ON \
           -DOPENSSL_ROOT_DIR=/opt/homebrew/opt/openssl@3 \
-          -DOPENSSL_INCLUDE_DIR=/opt/homebrew/opt/openssl@3/include \
-          -DMYSQL_INCLUDE_DIR=/opt/homebrew/opt/mysql-client/include \
-          -DMYSQL_CLIENT_LIBS=/opt/homebrew/opt/mysql-client/lib/libmysqlclient.dylib \
           -DENABLE_MYSQL=ON
         make -j$(sysctl -n hw.ncpu)
 
