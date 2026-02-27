@@ -21,7 +21,7 @@ set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 target_link_libraries(trojan ${CMAKE_THREAD_LIBS_INIT})
 
-find_package(Boost 1.66.0 REQUIRED COMPONENTS system program_options)
+find_package(Boost 1.66.0 REQUIRED COMPONENTS program_options)
 target_include_directories(trojan PRIVATE ${Boost_INCLUDE_DIR})
 target_link_libraries(trojan ${Boost_LIBRARIES})
 if(MSVC)
