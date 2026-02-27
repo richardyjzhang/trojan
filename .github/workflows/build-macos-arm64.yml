@@ -1,0 +1,64 @@
+name: Build trojan for macOS arm64
+
+on:
+  workflow_dispatch:  # 手动触发
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  build-macos-arm64:
+    runs-on: macos-14  # M1 runner
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install dependencies
+      run: |
+        brew install cmake boost openssl@3 mysql-client
+
+    - name: Build
+      run: |
+        mkdir build
+        cd build
+        cmake .. \
+          -DOPENSSL_ROOT_DIR=/opt/homebrew/opt/openssl@3 \
+          -DOPENSSL_INCLUDE_DIR=/opt/homebrew/opt/openssl@3/include \
+          -DMYSQL_INCLUDE_DIR=/opt/homebrew/opt/mysql-client/include \
+          -DMYSQL_CLIENT_LIBS=/opt/homebrew/opt/mysql-client/lib/libmysqlclient.dylib \
+          -DENABLE_MYSQL=ON
+        make -j$(sysctl -n hw.ncpu)
+
+    - name: Create release artifact
+      run: |
+        cd build
+        strip trojan
+        zip trojan-macos-arm64.zip trojan
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: trojan-macos-arm64
+        path: build/trojan-macos-arm64.zip
+
+  create-release:
+    needs: build-macos-arm64
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
+
+    steps:
+    - name: Download artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: trojan-macos-arm64
+
+    - name: Create release
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: v1.0.${{ github.run_number }}-arm64
+        name: trojan macOS arm64 build
+        files: trojan-macos-arm64.zip
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
